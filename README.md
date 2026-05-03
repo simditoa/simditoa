@@ -104,7 +104,7 @@ Or use directly with `FetchContent`:
 
 ```cmake
 include(FetchContent)
-FetchContent_Declare(simditoa GIT_REPOSITORY https://github.com/user/simditoa.git GIT_TAG main)
+FetchContent_Declare(simditoa GIT_REPOSITORY https://github.com/simditoa/simditoa.git GIT_TAG main)
 FetchContent_MakeAvailable(simditoa)
 target_link_libraries(myapp PRIVATE simditoa::simditoa)
 ```
