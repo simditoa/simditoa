@@ -1,0 +1,2 @@
+add_executable(simditoa_benchmark simditoa_benchmark.cpp)
+target_link_libraries(simditoa_benchmark PRIVATE simditoa)
