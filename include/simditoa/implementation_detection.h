@@ -1,0 +1,45 @@
+#ifndef SIMDITOA_IMPLEMENTATION_DETECTION_H
+#define SIMDITOA_IMPLEMENTATION_DETECTION_H
+
+#include "simditoa/portability.h"
+
+// Implementation IDs (ordered by preference, highest first)
+#define SIMDITOA_IMPLEMENTATION_ID_avx512 4
+#define SIMDITOA_IMPLEMENTATION_ID_fallback 2
+
+// --- AVX-512 IFMA (Ice Lake+ / Zen 4+) ---
+#ifndef SIMDITOA_IMPLEMENTATION_AVX512
+  #define SIMDITOA_IMPLEMENTATION_AVX512                                       \
+    (SIMDITOA_IS_X86_64 && SIMDITOA_AVX512_ALLOWED &&                          \
+     SIMDITOA_COMPILER_SUPPORTS_AVX512_IFMA)
+#endif
+#if SIMDITOA_IMPLEMENTATION_AVX512 && SIMDITOA_HAS_AVX512_IFMA
+  #define SIMDITOA_CAN_ALWAYS_RUN_AVX512 1
+#else
+  #define SIMDITOA_CAN_ALWAYS_RUN_AVX512 0
+#endif
+
+// --- Fallback (scalar) ---
+#ifndef SIMDITOA_IMPLEMENTATION_FALLBACK
+  #if SIMDITOA_CAN_ALWAYS_RUN_AVX512
+    #define SIMDITOA_IMPLEMENTATION_FALLBACK 0
+  #else
+    #define SIMDITOA_IMPLEMENTATION_FALLBACK 1
+  #endif
+#endif
+#define SIMDITOA_CAN_ALWAYS_RUN_FALLBACK SIMDITOA_IMPLEMENTATION_FALLBACK
+
+// --- Builtin implementation selection ---
+#ifndef SIMDITOA_BUILTIN_IMPLEMENTATION
+
+  #if SIMDITOA_CAN_ALWAYS_RUN_AVX512
+    #define SIMDITOA_BUILTIN_IMPLEMENTATION avx512
+  #elif SIMDITOA_CAN_ALWAYS_RUN_FALLBACK
+    #define SIMDITOA_BUILTIN_IMPLEMENTATION fallback
+  #else
+    #error "All implementations (including fallback) have been disabled!"
+  #endif
+
+#endif // SIMDITOA_BUILTIN_IMPLEMENTATION
+
+#endif // SIMDITOA_IMPLEMENTATION_DETECTION_H
