@@ -1,6 +1,7 @@
 #include "simditoa.h"
 
 #include <benchmark/benchmark.h>
+#include <jeaiii_to_text.h>
 
 #include <algorithm>
 #include <charconv>
@@ -67,6 +68,23 @@ void bench_std_to_chars(benchmark::State &state) {
   set_counters(state, bytes);
 }
 
+void bench_jeaiii_to_text(benchmark::State &state) {
+  const auto &values = get_values();
+  char buf[simditoa::MAX_DIGITS + 1];
+  size_t bytes = 0;
+  for (auto _ : state) {
+    size_t iter_bytes = 0;
+    for (const auto &v : values) {
+      char *end = jeaiii::to_text_from_integer(buf, v);
+      benchmark::DoNotOptimize(buf);
+      iter_bytes += static_cast<size_t>(end - buf);
+    }
+    benchmark::ClobberMemory();
+    bytes += iter_bytes;
+  }
+  set_counters(state, bytes);
+}
+
 void bench_simditoa_to_chars(benchmark::State &state) {
   const auto &values = get_values();
   char buf[simditoa::MAX_DIGITS + 1];
@@ -95,6 +113,11 @@ BENCHMARK(bench_null)
     ->DisplayAggregatesOnly(true);
 
 BENCHMARK(bench_std_to_chars)
+    ->Repetitions(10)
+    ->ComputeStatistics("max", max_stat)
+    ->DisplayAggregatesOnly(true);
+
+BENCHMARK(bench_jeaiii_to_text)
     ->Repetitions(10)
     ->ComputeStatistics("max", max_stat)
     ->DisplayAggregatesOnly(true);
