@@ -41,51 +41,45 @@ ctest --test-dir build
 
 ## Benchmark Result
 
-Example benchmark run:
+Benchmarks use [Google Benchmark](https://github.com/google/benchmark) and convert 1,000,000 random `int64_t` values, repeated 10 times. A `bench_null` baseline measures the cost of just iterating the input vector, so per-conversion numbers can be read directly without subtracting loop overhead. The suite compares simditoa against `std::to_chars` and [jeaiii/itoa](https://github.com/jeaiii/itoa).
 
-| Implementation | Best time | Throughput |
-|---|---:|---:|
-| `std::to_chars` | 36.35 ns/int | 27.51 M ints/sec |
-| `simditoa::to_chars` | 15.82 ns/int | 63.22 M ints/sec |
+The AVX-512 path is gated at compile time on `__AVX512IFMA__`. Build with the right flags to enable it:
 
-Speedup: **2.30x**.
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DSIMDITOA_BUILD_BENCHMARKS=ON \
+  -DCMAKE_CXX_FLAGS="-mavx512f -mavx512dq -mavx512bw -mavx512vl -mavx512ifma -mavx512vbmi"
+```
+
+### Results (AWS EC2, Intel Xeon Platinum 8375C @ 2.90 GHz, 2 vCPU)
+
+| Implementation | ns/int | M ints/sec | GB/s |
+|---|---:|---:|---:|
+| `bench_null` (loop overhead) | 0.14 | 6,916 | 55.32 |
+| `std::to_chars` | 21.67 | 46.2 | 0.89 |
+| `jeaiii::to_text_from_integer` | 12.38 | 80.8 | 1.57 |
+| `simditoa::to_chars` (AVX-512 IFMA) | 10.02 | 99.8 | 1.93 |
+
+Speedup vs `std::to_chars`: **2.16x**. simditoa is also ~1.24x faster than jeaiii/itoa on the same hardware.
 
 ```text
-std::to_chars (baseline)
-  iter  1: 45.56 ns/int  (21.95 M ints/sec)
-  iter  2: 40.89 ns/int  (24.46 M ints/sec)
-  iter  3: 36.60 ns/int  (27.32 M ints/sec)
-  iter  4: 36.49 ns/int  (27.41 M ints/sec)
-  iter  5: 36.59 ns/int  (27.33 M ints/sec)
-  iter  6: 36.61 ns/int  (27.31 M ints/sec)
-  iter  7: 36.35 ns/int  (27.51 M ints/sec)
-  iter  8: 37.57 ns/int  (26.62 M ints/sec)
-  iter  9: 36.54 ns/int  (27.37 M ints/sec)
-  iter 10: 37.04 ns/int  (27.00 M ints/sec)
-
-  best: 36.35 ns/int  (27.51 M ints/sec)
-  total chars (last run): 19378610
-
-simditoa::to_chars
-  iter  1: 16.08 ns/int  (62.17 M ints/sec)
-  iter  2: 16.16 ns/int  (61.88 M ints/sec)
-  iter  3: 15.86 ns/int  (63.05 M ints/sec)
-  iter  4: 15.89 ns/int  (62.92 M ints/sec)
-  iter  5: 15.87 ns/int  (63.02 M ints/sec)
-  iter  6: 15.98 ns/int  (62.59 M ints/sec)
-  iter  7: 15.96 ns/int  (62.66 M ints/sec)
-  iter  8: 15.82 ns/int  (63.22 M ints/sec)
-  iter  9: 16.09 ns/int  (62.17 M ints/sec)
-  iter 10: 15.95 ns/int  (62.69 M ints/sec)
-
-  best: 15.82 ns/int  (63.22 M ints/sec)
-  total chars (last run): 19378610
-
---- Summary ---
-  std::to_chars:    36.35 ns/int
-  simditoa:         15.82 ns/int
-  speedup:          2.30x
+----------------------------------------------------------------------------------------------------
+Benchmark                                          Time             CPU   Iterations UserCounters...
+----------------------------------------------------------------------------------------------------
+bench_null/repeats:10_mean                    144639 ns       144604 ns           10 bytes/s=55.3242G/s ints/s=6.91553G/s ns/int=144.604ps
+bench_null/repeats:10_median                  144508 ns       144455 ns           10 bytes/s=55.3806G/s ints/s=6.92258G/s ns/int=144.455ps
+bench_null/repeats:10_cv                        0.34 %          0.33 %            10 bytes/s=0.33%     ints/s=0.33%      ns/int=0.33%
+bench_std_to_chars/repeats:10_mean          21670905 ns     21665266 ns           10 bytes/s=894.46M/s  ints/s=46.1571M/s ns/int=21.6653ns
+bench_std_to_chars/repeats:10_median        21668440 ns     21663994 ns           10 bytes/s=894.508M/s ints/s=46.1595M/s ns/int=21.664ns
+bench_std_to_chars/repeats:10_cv                0.24 %          0.24 %            10 bytes/s=0.24%     ints/s=0.24%      ns/int=0.24%
+bench_jeaiii_to_text/repeats:10_mean        12376965 ns     12375338 ns           10 bytes/s=1.56591G/s ints/s=80.806M/s  ns/int=12.3753ns
+bench_jeaiii_to_text/repeats:10_median      12374998 ns     12373797 ns           10 bytes/s=1.5661G/s  ints/s=80.8159M/s ns/int=12.3738ns
+bench_jeaiii_to_text/repeats:10_cv              0.14 %          0.14 %            10 bytes/s=0.14%     ints/s=0.14%      ns/int=0.14%
+bench_simditoa_to_chars/repeats:10_mean     10020806 ns     10020124 ns           10 bytes/s=1.93397G/s ints/s=99.7992M/s ns/int=10.0201ns
+bench_simditoa_to_chars/repeats:10_median   10021858 ns     10021265 ns           10 bytes/s=1.93375G/s ints/s=99.7878M/s ns/int=10.0213ns
+bench_simditoa_to_chars/repeats:10_cv           0.05 %          0.05 %            10 bytes/s=0.05%     ints/s=0.05%      ns/int=0.05%
 ```
+
+Run-to-run variation is under 0.4% on every case (`_cv` column), so the means and medians can be compared directly.
 
 ### Install
 
