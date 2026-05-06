@@ -19,7 +19,7 @@ set -euo pipefail
 #   FORCE_AVX512=0        # set to 1 to force AVX-512 flags even if cpuinfo lookup fails
 #
 # Example:
-#   curl -fsSL https://gist.githubusercontent.com/<user>/<gist>/raw/script.sh \
+#   curl -fsSL https://gist.githubusercontent.com/hirebarend/357f646d2f642a0e3d7ed233abb550a0/raw/script.sh \
 #     | BRANCH=main bash
 
 REPO_URL="${REPO_URL:-https://github.com/simditoa/simditoa.git}"
