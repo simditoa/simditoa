@@ -54,32 +54,36 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release -DSIMDITOA_BUILD_BENCHMARKS=ON \
 
 | Implementation | ns/int | M ints/sec | GB/s |
 |---|---:|---:|---:|
-| `bench_null` (loop overhead) | 0.14 | 6,916 | 55.32 |
-| `std::to_chars` | 21.67 | 46.2 | 0.89 |
-| `jeaiii::to_text_from_integer` | 12.38 | 80.8 | 1.57 |
-| `simditoa::to_chars` (AVX-512 IFMA) | 10.02 | 99.8 | 1.93 |
+| `bench_null` (loop overhead) | 0.14 | 6,919 | 55.35 |
+| `fmt::format_int` | 34.58 | 28.9 | 0.56 |
+| `std::to_chars` | 22.14 | 45.2 | 0.88 |
+| `jeaiii::to_text_from_integer` | 12.21 | 81.9 | 1.59 |
+| `simditoa::to_chars` (AVX-512 IFMA) | 9.99 | 100.1 | 1.94 |
 
-Speedup vs `std::to_chars`: **2.16x**. simditoa is also ~1.24x faster than jeaiii/itoa on the same hardware.
+Speedup vs `std::to_chars`: **2.22x**. simditoa is also ~1.22x faster than jeaiii/itoa and ~3.46x faster than `fmt::format_int` on the same hardware. fmt's general-purpose formatting machinery makes its `format_int` shortcut the slowest of the four implementations measured here, despite avoiding allocation.
 
 ```text
 ----------------------------------------------------------------------------------------------------
 Benchmark                                          Time             CPU   Iterations UserCounters...
 ----------------------------------------------------------------------------------------------------
-bench_null/repeats:10_mean                    144639 ns       144604 ns           10 bytes/s=55.3242G/s ints/s=6.91553G/s ns/int=144.604ps
-bench_null/repeats:10_median                  144508 ns       144455 ns           10 bytes/s=55.3806G/s ints/s=6.92258G/s ns/int=144.455ps
-bench_null/repeats:10_cv                        0.34 %          0.33 %            10 bytes/s=0.33%     ints/s=0.33%      ns/int=0.33%
-bench_std_to_chars/repeats:10_mean          21670905 ns     21665266 ns           10 bytes/s=894.46M/s  ints/s=46.1571M/s ns/int=21.6653ns
-bench_std_to_chars/repeats:10_median        21668440 ns     21663994 ns           10 bytes/s=894.508M/s ints/s=46.1595M/s ns/int=21.664ns
-bench_std_to_chars/repeats:10_cv                0.24 %          0.24 %            10 bytes/s=0.24%     ints/s=0.24%      ns/int=0.24%
-bench_jeaiii_to_text/repeats:10_mean        12376965 ns     12375338 ns           10 bytes/s=1.56591G/s ints/s=80.806M/s  ns/int=12.3753ns
-bench_jeaiii_to_text/repeats:10_median      12374998 ns     12373797 ns           10 bytes/s=1.5661G/s  ints/s=80.8159M/s ns/int=12.3738ns
+bench_null/repeats:10_mean                    144552 ns       144528 ns           10 bytes/s=55.3526G/s ints/s=6.91907G/s ns/int=144.528ps
+bench_null/repeats:10_median                  144512 ns       144488 ns           10 bytes/s=55.3677G/s ints/s=6.92097G/s ns/int=144.488ps
+bench_null/repeats:10_cv                        0.11 %          0.12 %            10 bytes/s=0.12%     ints/s=0.12%      ns/int=0.12%
+bench_std_to_chars/repeats:10_mean          22142972 ns     22137702 ns           10 bytes/s=876.07M/s  ints/s=45.2081M/s ns/int=22.1377ns
+bench_std_to_chars/repeats:10_median        21826691 ns     21816894 ns           10 bytes/s=888.239M/s ints/s=45.836M/s  ns/int=21.8169ns
+bench_std_to_chars/repeats:10_cv                3.05 %          3.05 %            10 bytes/s=2.92%     ints/s=2.92%      ns/int=3.05%
+bench_jeaiii_to_text/repeats:10_mean        12213726 ns     12212966 ns           10 bytes/s=1.58673G/s ints/s=81.8803M/s ns/int=12.213ns
+bench_jeaiii_to_text/repeats:10_median      12221402 ns     12220576 ns           10 bytes/s=1.58574G/s ints/s=81.8292M/s ns/int=12.2206ns
 bench_jeaiii_to_text/repeats:10_cv              0.14 %          0.14 %            10 bytes/s=0.14%     ints/s=0.14%      ns/int=0.14%
-bench_simditoa_to_chars/repeats:10_mean     10020806 ns     10020124 ns           10 bytes/s=1.93397G/s ints/s=99.7992M/s ns/int=10.0201ns
-bench_simditoa_to_chars/repeats:10_median   10021858 ns     10021265 ns           10 bytes/s=1.93375G/s ints/s=99.7878M/s ns/int=10.0213ns
-bench_simditoa_to_chars/repeats:10_cv           0.05 %          0.05 %            10 bytes/s=0.05%     ints/s=0.05%      ns/int=0.05%
+bench_fmt_format_int/repeats:10_mean        34585620 ns     34583919 ns           10 bytes/s=560.336M/s ints/s=28.9152M/s ns/int=34.5839ns
+bench_fmt_format_int/repeats:10_median      34578580 ns     34577292 ns           10 bytes/s=560.443M/s ints/s=28.9207M/s ns/int=34.5773ns
+bench_fmt_format_int/repeats:10_cv              0.09 %          0.09 %            10 bytes/s=0.09%     ints/s=0.09%      ns/int=0.09%
+bench_simditoa_to_chars/repeats:10_mean      9994703 ns      9994211 ns           10 bytes/s=1.93898G/s ints/s=100.058M/s ns/int=9.99421ns
+bench_simditoa_to_chars/repeats:10_median    9994022 ns      9993360 ns           10 bytes/s=1.93915G/s ints/s=100.066M/s ns/int=9.99336ns
+bench_simditoa_to_chars/repeats:10_cv           0.09 %          0.09 %            10 bytes/s=0.09%     ints/s=0.09%      ns/int=0.09%
 ```
 
-Run-to-run variation is under 0.4% on every case (`_cv` column), so the means and medians can be compared directly.
+Run-to-run variation is under 0.15% on every case except `std::to_chars` (3.05%), where the libstdc++ implementation shows higher noise. Means and medians can still be compared directly.
 
 ### Install
 
