@@ -1,3 +1,5 @@
+enable_language(C)
+
 include(FetchContent)
 
 FetchContent_Declare(
@@ -29,5 +31,27 @@ set(FMT_TEST OFF CACHE BOOL "" FORCE)
 set(FMT_DOC OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(fmt)
 
+FetchContent_Declare(
+    rapidjson
+    GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
+    GIT_TAG v1.1.0
+    SOURCE_SUBDIR _skip_rapidjson_cmake
+)
+FetchContent_MakeAvailable(rapidjson)
+
+add_library(rapidjson INTERFACE)
+target_include_directories(rapidjson INTERFACE ${rapidjson_SOURCE_DIR}/include)
+
+FetchContent_Declare(
+    c_numconv_benchmark
+    GIT_REPOSITORY https://github.com/ibireme/c_numconv_benchmark.git
+    GIT_TAG master
+    SOURCE_SUBDIR _skip_numconv_cmake
+)
+FetchContent_MakeAvailable(c_numconv_benchmark)
+
+add_library(yy_itoa STATIC ${c_numconv_benchmark_SOURCE_DIR}/src/itoa/itoa_yy.c)
+set_target_properties(yy_itoa PROPERTIES C_STANDARD 99 POSITION_INDEPENDENT_CODE ON)
+
 add_executable(simditoa_benchmark simditoa_benchmark.cpp)
-target_link_libraries(simditoa_benchmark PRIVATE simditoa benchmark::benchmark_main jeaiii_itoa fmt::fmt)
+target_link_libraries(simditoa_benchmark PRIVATE simditoa benchmark::benchmark_main jeaiii_itoa fmt::fmt rapidjson yy_itoa)

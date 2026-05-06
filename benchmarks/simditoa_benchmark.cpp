@@ -3,6 +3,9 @@
 #include <benchmark/benchmark.h>
 #include <fmt/format.h>
 #include <jeaiii_to_text.h>
+#include <rapidjson/internal/itoa.h>
+
+extern "C" char *itoa_i64_yy(int64_t val, char *buf);
 
 #include <algorithm>
 #include <charconv>
@@ -86,6 +89,40 @@ void bench_jeaiii_to_text(benchmark::State &state) {
   set_counters(state, bytes);
 }
 
+void bench_yy_itoa(benchmark::State &state) {
+  const auto &values = get_values();
+  char buf[simditoa::MAX_DIGITS + 1];
+  size_t bytes = 0;
+  for (auto _ : state) {
+    size_t iter_bytes = 0;
+    for (const auto &v : values) {
+      char *end = itoa_i64_yy(v, buf);
+      benchmark::DoNotOptimize(buf);
+      iter_bytes += static_cast<size_t>(end - buf);
+    }
+    benchmark::ClobberMemory();
+    bytes += iter_bytes;
+  }
+  set_counters(state, bytes);
+}
+
+void bench_rapidjson_branchlut(benchmark::State &state) {
+  const auto &values = get_values();
+  char buf[simditoa::MAX_DIGITS + 1];
+  size_t bytes = 0;
+  for (auto _ : state) {
+    size_t iter_bytes = 0;
+    for (const auto &v : values) {
+      char *end = rapidjson::internal::i64toa(v, buf);
+      benchmark::DoNotOptimize(buf);
+      iter_bytes += static_cast<size_t>(end - buf);
+    }
+    benchmark::ClobberMemory();
+    bytes += iter_bytes;
+  }
+  set_counters(state, bytes);
+}
+
 void bench_fmt_format_int(benchmark::State &state) {
   const auto &values = get_values();
   size_t bytes = 0;
@@ -135,6 +172,16 @@ BENCHMARK(bench_std_to_chars)
     ->DisplayAggregatesOnly(true);
 
 BENCHMARK(bench_jeaiii_to_text)
+    ->Repetitions(10)
+    ->ComputeStatistics("max", max_stat)
+    ->DisplayAggregatesOnly(true);
+
+BENCHMARK(bench_yy_itoa)
+    ->Repetitions(10)
+    ->ComputeStatistics("max", max_stat)
+    ->DisplayAggregatesOnly(true);
+
+BENCHMARK(bench_rapidjson_branchlut)
     ->Repetitions(10)
     ->ComputeStatistics("max", max_stat)
     ->DisplayAggregatesOnly(true);
