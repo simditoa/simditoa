@@ -41,7 +41,7 @@ ctest --test-dir build
 
 ## Benchmark Result
 
-Benchmarks use [Google Benchmark](https://github.com/google/benchmark) and convert 1,000,000 random `int64_t` values, repeated 10 times. A `bench_null` baseline measures the cost of just iterating the input vector, so per-conversion numbers can be read directly without subtracting loop overhead. The suite compares simditoa against `std::to_chars` and [jeaiii/itoa](https://github.com/jeaiii/itoa).
+Benchmarks use [Google Benchmark](https://github.com/google/benchmark) and convert 1,000,000 random `int64_t` values, repeated 10 times. A `bench_null` baseline measures the cost of just iterating the input vector, so per-conversion numbers can be read directly without subtracting loop overhead. The suite compares simditoa against `std::to_chars`, [jeaiii/itoa](https://github.com/jeaiii/itoa), and [fmtlib/fmt](https://github.com/fmtlib/fmt) (`fmt::format_int`).
 
 The AVX-512 path is gated at compile time on `__AVX512IFMA__`. Build with the right flags to enable it:
 
