@@ -128,8 +128,3 @@ endif()
 
 enable_testing()
 add_subdirectory(tests)
-
-option(SIMDITOA_BUILD_BENCHMARKS "Build benchmarks" OFF)
-if(SIMDITOA_BUILD_BENCHMARKS)
-  add_subdirectory(benchmarks)
-endif()
