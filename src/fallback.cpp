@@ -68,6 +68,24 @@ size_t to_chars(uint64_t value, char *buffer) noexcept {
   return to_chars_unsigned(value, buffer);
 }
 
+// The scalar fallback has no separate homogeneous/heterogeneous paths:
+// the variant distinction only changes code generation for the SIMD
+// kernel. Both names delegate to the same routine here so callers can
+// use a uniform API across implementations.
+
+size_t to_chars_heterogeneous(uint64_t value, char *buffer) noexcept {
+  return to_chars(value, buffer);
+}
+size_t to_chars_heterogeneous(int64_t value, char *buffer) noexcept {
+  return to_chars(value, buffer);
+}
+size_t to_chars_homogeneous(uint64_t value, char *buffer) noexcept {
+  return to_chars(value, buffer);
+}
+size_t to_chars_homogeneous(int64_t value, char *buffer) noexcept {
+  return to_chars(value, buffer);
+}
+
 } // namespace fallback
 } // namespace simditoa
 

@@ -10,13 +10,7 @@ cmake --build build
 ctest --test-dir build
 ```
 
-To run benchmarks:
-
-```bash
-cmake -B build -DSIMDITOA_DEVELOPER_MODE=ON -DSIMDITOA_BUILD_BENCHMARKS=ON
-cmake --build build --target simditoa_benchmark
-./build/benchmarks/simditoa_benchmark
-```
+Benchmarks live in a separate repository: [simditoa/benchmarks](https://github.com/simditoa/benchmarks).
 
 ## Coding Guidelines
 
