@@ -23,6 +23,45 @@ buf[len] = '\0';
 
 Both `int64_t` and `uint64_t` overloads are provided. The buffer must hold at least `simditoa::MAX_DIGITS + 1` (21) bytes.
 
+### Heterogeneous and homogeneous variants
+
+Two specialized conversion routines are exposed (paper §5.4 and §5.5). They produce identical output; the choice only affects performance on a batch of conversions.
+
+- `simditoa::to_chars_heterogeneous` is branch-light and uses masked stores. Best when digit lengths in the batch vary unpredictably.
+- `simditoa::to_chars_homogeneous` is per-length-specialized with direct unmasked stores. Best when most inputs share the same digit length (database identifiers, Unix timestamps, telemetry counters).
+
+`simditoa::to_chars` defaults to the heterogeneous variant.
+
+### Batch API with dynamic variant selection
+
+For batch conversion, `to_chars_batch` automatically selects the right variant (paper §5.6, Algorithm 1) by sampling 1% of the input and checking whether one digit length dominates:
+
+```cpp
+#include "simditoa.h"
+
+std::vector<uint64_t> values = /* ... */;
+std::vector<std::array<char, simditoa::MAX_DIGITS + 1>> buffers(values.size());
+std::vector<char*> ptrs(values.size());
+std::vector<size_t> lengths(values.size());
+for (size_t i = 0; i < values.size(); ++i) {
+    ptrs[i] = buffers[i].data();
+}
+
+// Auto-selects homogeneous or heterogeneous based on the input distribution.
+simditoa::to_chars_batch(values.data(), values.size(),
+                         ptrs.data(), lengths.data());
+```
+
+To force a variant, pass it explicitly:
+
+```cpp
+simditoa::to_chars_batch(values.data(), values.size(),
+                         ptrs.data(), lengths.data(),
+                         simditoa::Variant::Homogeneous);
+```
+
+The sampling rate and homogeneity threshold are configurable via `simditoa::BatchOptions` (defaults: 0.01 and 0.95, matching the paper).
+
 ## Build
 
 ```bash
@@ -73,6 +112,13 @@ The AVX-512 implementation is based on:
 > Champagne Gareau & Lemire, "Converting an Integer to a Decimal String in Under Two Nanoseconds," arXiv:2604.26019, 2026.
 
 It uses AVX-512 IFMA (`vpmadd52lo`/`vpmadd52hi`) with precomputed constants `c_k = ⌊2^52 / 10^k⌋` to extract all 8 decimal digits in parallel without division.
+
+The library exposes both routines built on top of this kernel:
+
+- **Heterogeneous** (§5.4): masked stores with a runtime-computed mask, uniform across digit lengths.
+- **Homogeneous** (§5.5): a 20-way dispatcher on digit count, each branch using direct unmasked stores at compile-time offsets. The 9-15 digit branches use `_mm_bsrli_si128` to strip the leading-zero bytes from the 16-digit kernel output; the 17-20 digit branches write a 1-4 digit scalar prefix followed by a full-width 16-digit SIMD block (Figure 7 in the paper).
+
+The dynamic selection step (§5.6) samples 1% of the input with a deterministic xorshift sampler and picks the variant whose strengths match the input's digit-length distribution.
 
 ## License
 
