@@ -1,6 +1,7 @@
 #include "simditoa.h"
 
 #include <cassert>
+#include <array>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>

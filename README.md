@@ -7,9 +7,11 @@ SIMD-accelerated 64-bit integer-to-string conversion.
 | Architecture | Instruction set | Notes |
 |---|---|---|
 | x86-64 | AVX-512 IFMA + VBMI | Intel Ice Lake+, AMD Zen 4+ |
+| RISC-V (rv64) | Scalar fallback | Portable C++17; no RVV backend yet |
 | Any | Scalar fallback | Portable C++17 |
 
 The AVX-512 path is gated at compile time on `__AVX512IFMA__`. Build with `-mavx512ifma -mavx512vbmi` (and the surrounding AVX-512 flags) to enable it.
+For `riscv64`, the current portability path is the scalar fallback only, without RVV intrinsics or runtime dispatch.
 
 ## API
 
