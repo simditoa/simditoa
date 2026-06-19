@@ -22,13 +22,27 @@ using std::size_t;
   #endif
 #endif
 
-#if (defined(__x86_64__) || defined(_M_AMD64)) && !defined(_M_ARM64EC)
+#if (defined(__x86_64__) || defined(_M_AMD64)) && !defined(_M_ARM64EC) &&      \
+    !defined(__riscv)
   #define SIMDITOA_IS_X86_64 1
+#endif
+
+#if defined(__riscv)
+  #define SIMDITOA_IS_RISCV 1
+  #if defined(__riscv_xlen) && (__riscv_xlen == 64)
+    #define SIMDITOA_IS_RISCV64 1
+  #endif
 #endif
 
 // Ensure macros are always defined (0 if not detected)
 #ifndef SIMDITOA_IS_X86_64
   #define SIMDITOA_IS_X86_64 0
+#endif
+#ifndef SIMDITOA_IS_RISCV
+  #define SIMDITOA_IS_RISCV 0
+#endif
+#ifndef SIMDITOA_IS_RISCV64
+  #define SIMDITOA_IS_RISCV64 0
 #endif
 
 // AVX-512 IFMA + VBMI detection (required for Champagne-Lemire algorithm)

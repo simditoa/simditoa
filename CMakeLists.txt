@@ -9,6 +9,11 @@ project(
 
 include(GNUInstallDirs)
 
+string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" SIMDITOA_SYSTEM_PROCESSOR)
+if(SIMDITOA_SYSTEM_PROCESSOR MATCHES "^riscv(32|64)?$")
+  message(STATUS "RISC-V target detected; simditoa will use the scalar fallback implementation")
+endif()
+
 string(
     COMPARE EQUAL
     "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}"
